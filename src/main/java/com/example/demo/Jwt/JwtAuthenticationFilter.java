@@ -29,8 +29,6 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     @Autowired
     private ApplicationContext applicationContext;
 
-    // Method to lazily fetch the UserService bean from the ApplicationContext
-    // This is done to avoid Circular Dependency issues
     private UserService getUserService() {
         return applicationContext.getBean(UserService.class);
     }
