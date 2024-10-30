@@ -2,8 +2,10 @@ package com.example.demo.controllers;
 
 import com.example.demo.Dto.LoginDto;
 import com.example.demo.Jwt.JwtUtils;
+import com.example.demo.models.Student;
 import com.example.demo.models.User;
 import com.example.demo.responses.LoginResponse;
+import com.example.demo.responses.RegisterResponse;
 import com.example.demo.responses.StudentResponse;
 import com.example.demo.responses.UserResponse;
 import com.example.demo.services.AuthenticationService;
@@ -13,6 +15,9 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -43,14 +48,16 @@ public class AuthController {
                         user.getEmail(),
                         user.getFullName(),
                         user.getStudent().getEnrollNo(),
-                        user.getStudent().getCollege()
+                        user.getStudent().getCollege(),
+                        user.getRole()
                 );
                 return ResponseEntity.ok(new LoginResponse<>(true, "User logged in successfully",jwt,studentResponse));
             }
             else{
                 UserResponse userResponse = new UserResponse(
                         user.getEmail(),
-                        user.getFullName()
+                        user.getFullName(),
+                        user.getRole()
                 );
                 return ResponseEntity.ok(new LoginResponse<>(true, "User logged in successfully",jwt,userResponse));
             }
@@ -65,11 +72,43 @@ public class AuthController {
         }
     }
 
-    // Restrict access to ADMIN role only
     @PostMapping("/register")
     public ResponseEntity<User> registerUser(@RequestBody User user) {
         User newUser = userService.addUser(user);
         return ResponseEntity.ok(newUser); // Return the newly created user
     }
 
+    @GetMapping("/me")
+    public ResponseEntity<RegisterResponse<?>> login() {
+        try {
+            Authentication authentication= SecurityContextHolder.getContext().getAuthentication();
+            String username= ((UserDetails) authentication.getPrincipal()).getUsername();
+            User user = (User) userService.loadUserByUsername(username);
+            if(user.getRole().equals("STUDENT")){
+                StudentResponse studentResponse = new StudentResponse(
+                        user.getEmail(),
+                        user.getFullName(),
+                        user.getStudent().getEnrollNo(),
+                        user.getStudent().getCollege(),
+                        user.getRole()
+                );
+                return ResponseEntity.ok(new RegisterResponse<>(true, "User Details Fetched",studentResponse));
+            }
+            else{
+                UserResponse userResponse = new UserResponse(
+                        user.getEmail(),
+                        user.getFullName(),
+                        user.getRole()
+                );
+                return ResponseEntity.ok(new RegisterResponse<>(true, "User Details Fetched",userResponse));
+            }
+        } catch (IllegalArgumentException e) {
+            RegisterResponse<Void> response = new RegisterResponse<>(
+                    false,
+                    "User details fetching failed :"+e.getMessage(),
+                    null
+            );
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
+        }
+    }
 }

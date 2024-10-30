@@ -110,7 +110,8 @@ public class ExamService {
                         student.getUser().getEmail(),
                         student.getUser().getFullName(),
                         student.getEnrollNo(),
-                        student.getCollege()))
+                        student.getCollege(),
+                        student.getUser().getRole()))
                 .collect(Collectors.toList());
         examResponse.setEnrolledStudents(studentResponses);
 

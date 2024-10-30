@@ -12,4 +12,5 @@ public class StudentResponse {
     private String fullName;
     private long enrollNo;
     private String college;
+    private String role;
 }

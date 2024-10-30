@@ -49,7 +49,8 @@ public class AdminController {
                     createdUser.getEmail(),
                     student.getUser().getUsername(), // Assuming username is the full name
                     student.getEnrollNo(),
-                    student.getCollege()
+                    student.getCollege(),
+                    student.getUser().getRole()
             );
             return ResponseEntity.ok(new RegisterResponse<>(true, "Student created successfully",studentResponse));
         } catch (Exception e) {
