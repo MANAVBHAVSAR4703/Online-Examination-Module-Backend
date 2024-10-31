@@ -4,6 +4,8 @@ import com.example.demo.Dto.QuestionDto;
 import com.example.demo.models.Option;
 import com.example.demo.models.Question;
 import com.example.demo.repositories.QuestionRepository;
+import com.example.demo.responses.OptionResponse;
+import com.example.demo.responses.QuestionResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -35,5 +37,27 @@ public class QuestionService {
         }
         question.setOptions(options);
         return questionRepository.save(question);
+    }
+
+    public List<Question> getAllQuestions(){
+        return questionRepository.findAll();
+    }
+
+    public QuestionResponse<OptionResponse> getQuestionResponse(Question question){
+        List<OptionResponse> optionResponses = question.getOptions().stream()
+                .map(option -> {
+                    OptionResponse optionResponse = new OptionResponse();
+                    optionResponse.setId(option.getId());
+                    optionResponse.setText(option.getText());
+                    return optionResponse;
+                })
+                .toList();
+        return new QuestionResponse<OptionResponse>(
+                question.getId(),
+                question.getText(),
+                question.getCategory(),
+                optionResponses,
+                question.getCorrectOptionIndex()
+        );
     }
 }

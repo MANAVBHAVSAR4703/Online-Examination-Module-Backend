@@ -9,6 +9,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
+
 @Service
 public class AdminService {
 
@@ -26,6 +28,9 @@ public class AdminService {
     }
 
     public User createUser(StudentDto studentDto) {
+        if (userRepository.existsByEmail(studentDto.getEmail())) {
+            throw new IllegalArgumentException("Student with email " + studentDto.getEmail() + " already exists.");
+        }
         // Map StudentDto data to User entity
         User user = new User();
         user.setEmail(studentDto.getEmail());
@@ -48,5 +53,8 @@ public class AdminService {
         return userRepository.save(user);
     }
 
+    public List<Student> getStudentsFromDb(){
+        return studentRepository.findAll();
+    }
 
 }

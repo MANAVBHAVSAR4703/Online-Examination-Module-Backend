@@ -18,6 +18,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.client.HttpClientErrorException;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 @RestController
 @PreAuthorize("hasRole('ADMIN')")
@@ -67,25 +68,10 @@ public class AdminController {
     public ResponseEntity<?> createQuestion(@Validated @RequestBody QuestionDto questionDto){
         try {
             Question createdQuestion = questionService.createQuestion(questionDto);
-            List<OptionResponse> optionResponses = createdQuestion.getOptions().stream()
-                    .map(option -> {
-                        OptionResponse optionResponse = new OptionResponse();
-                        optionResponse.setId(option.getId());
-                        optionResponse.setText(option.getText());
-                        return optionResponse;
-                    })
-                    .toList();
-            QuestionResponse<OptionResponse> questionResponse = new QuestionResponse<OptionResponse>(
-                    createdQuestion.getId(),
-                    createdQuestion.getText(),
-                    createdQuestion.getCategory(),
-                    optionResponses,
-                    createdQuestion.getCorrectOptionIndex()
-            );
             return ResponseEntity.ok(new RegisterResponse<>(
                     true,
                     "Question added successfully",
-                    questionResponse));
+                    questionService.getQuestionResponse(createdQuestion)));
 
         } catch (Exception e) {
             RegisterResponse<Void> response = new RegisterResponse<>(
@@ -103,13 +89,13 @@ public class AdminController {
             Exam createdExam = examService.createExam(examDto);
             return ResponseEntity.ok(new RegisterResponse<>(
                     true,
-                    "Question added successfully",
+                    "Exam created successfully",
                     examService.getExamResponse(createdExam)));
         }
         catch (IllegalArgumentException e){
             RegisterResponse<Void> response = new RegisterResponse<>(
                     false,
-                    "Question adding failed : "+e.getMessage(),
+                    "Exam creation failed : "+e.getMessage(),
                     null
             );
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
@@ -117,11 +103,72 @@ public class AdminController {
         catch (Exception e){
             RegisterResponse<Void> response = new RegisterResponse<>(
                     false,
-                    "Question adding failed : "+e.getMessage(),
+                    "Exam creation failed : "+e.getMessage(),
                     null
             );
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
         }
 
     }
+
+    @GetMapping("/getStudents")
+    public ResponseEntity<RegisterResponse<List<StudentResponse>>> getStudents(){
+        try {
+            List<Student> students = adminService.getStudentsFromDb();
+            List<StudentResponse> studentResponseList = students.stream().map(student -> {
+                StudentResponse studentResponse = new StudentResponse();
+                studentResponse.setFullName(student.getUser().getFullName());
+                studentResponse.setRole(student.getUser().getRole());
+                studentResponse.setEmail(student.getUser().getEmail());
+                studentResponse.setCollege(student.getCollege());
+                studentResponse.setEnrollNo(student.getEnrollNo());
+                return studentResponse;
+            }).toList();
+            return ResponseEntity.ok(new RegisterResponse<>(
+                    true,
+                    "Students Fetched Successfully",
+                    studentResponseList));
+        } catch (Exception e) {
+            return ResponseEntity.ok(new RegisterResponse<>(
+                    false,
+                    "Students Fetching Failed",
+                    null));
+        }
+
+    }
+
+    @GetMapping("/getExams")
+    public ResponseEntity<RegisterResponse<List<ExamResponse>>> getExams(){
+        try {
+            List<Exam> exams = examService.getALlExams();
+            List<ExamResponse> examResponseList = exams.stream().map(examService::getExamResponse).toList();
+            return ResponseEntity.ok(new RegisterResponse<>(
+                    true,
+                    "Exams Fetched Successfully",
+                    examResponseList));
+        }catch (Exception e){
+            return ResponseEntity.ok(new RegisterResponse<>(
+                    true,
+                    "Exams Fetching Failed",
+                    null));
+        }
+    }
+
+    @GetMapping("/getQuestions")
+    public ResponseEntity<RegisterResponse<List<QuestionResponse<OptionResponse>>>> getQuestions(){
+        try {
+            List<Question> questions=questionService.getAllQuestions();
+            List<QuestionResponse<OptionResponse>> questionResponseList=questions.stream().map(questionService::getQuestionResponse).toList();
+            return ResponseEntity.ok(new RegisterResponse<>(
+                    true,
+                    "Questions Fetched Successfully",
+                    questionResponseList));
+        }catch (Exception e){
+            return ResponseEntity.ok(new RegisterResponse<>(
+                    true,
+                    "Questions Fetching Failed",
+                    null));
+        }
+    }
+
 }

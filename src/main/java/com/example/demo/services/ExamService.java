@@ -148,4 +148,7 @@ public class ExamService {
         return exams.stream().map(this::getExamResponse).collect(Collectors.toList());
     }
 
+    public List<Exam> getALlExams(){
+        return examRepository.findAll();
+    }
 }
