@@ -171,4 +171,34 @@ public class AdminController {
         }
     }
 
+    @GetMapping("/getOverview")
+    public ResponseEntity<RegisterResponse<OverviewResponse>> getOverview(){
+        try {
+            int LogicalQuestionsCount = questionService.getAllQuestions("Logical").size();
+            int TechnicalQuestionsCount = questionService.getAllQuestions("Technical").size();
+            int ProgrammingQuestionsCount = questionService.getAllQuestions("Programming").size();
+            int ExamCount = examService.getALlExams().size();
+            int studentCount = adminService.getStudentsFromDb().size();
+            int collegesCount = adminService.getDistinctColleges().size();
+
+            OverviewResponse overviewResponse = new OverviewResponse(
+                    LogicalQuestionsCount,
+                    TechnicalQuestionsCount,
+                    ProgrammingQuestionsCount,
+                    ExamCount,
+                    studentCount,
+                    collegesCount);
+
+            return ResponseEntity.ok(new RegisterResponse<>(
+                    true,
+                    "Overview Fetched Successfully",
+                    overviewResponse));
+        }catch (Exception e){
+            return ResponseEntity.ok(new RegisterResponse<>(
+                    true,
+                    "Overview Fetching Failed",
+                    null));
+        }
+    }
+
 }

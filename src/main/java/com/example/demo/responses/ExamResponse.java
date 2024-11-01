@@ -9,6 +9,7 @@ import java.util.List;
 @Getter
 @Setter
 public class ExamResponse {
+    private Long id;
     private String title;
     private LocalDateTime startTime;
     private int duration;

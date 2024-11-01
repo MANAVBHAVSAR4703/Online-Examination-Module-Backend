@@ -16,9 +16,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -98,6 +96,7 @@ public class ExamService {
     public ExamResponse getExamResponse(Exam exam)  {
         // Map the Exam entity to ExamResponse DTO
         ExamResponse examResponse = new ExamResponse();
+        examResponse.setId(exam.getId());
         examResponse.setTitle(exam.getTitle());
         examResponse.setStartTime(exam.getStartTime());
         examResponse.setDuration(exam.getDuration());
@@ -141,14 +140,47 @@ public class ExamService {
         return examResponse;
     }
 
+    public ExamResponse getExamResponseWithoutQuestions(Exam exam)  {
+        ExamResponse examResponse = new ExamResponse();
+        examResponse.setId(exam.getId());
+        examResponse.setTitle(exam.getTitle());
+        examResponse.setStartTime(exam.getStartTime());
+        examResponse.setDuration(exam.getDuration());
+        examResponse.setPassingCriteria(exam.getPassingCriteria());
+        examResponse.setCompleted(exam.isCompleted());
+
+        // Map each Student to StudentResponse
+        List<StudentResponse> studentResponses = exam.getEnrolledStudents().stream()
+                .map(student -> new StudentResponse(
+                        student.getUser().getEmail(),
+                        student.getUser().getFullName(),
+                        student.getEnrollNo(),
+                        student.getCollege(),
+                        student.getUser().getRole()))
+                .collect(Collectors.toList());
+        examResponse.setEnrolledStudents(studentResponses);
+        examResponse.setQuestions(null);
+
+        return examResponse;
+    }
+
     public List<ExamResponse> getExamsByStudent(Long studentId) {
         Student student = studentRepository.findById(studentId)
                 .orElseThrow(() -> new RuntimeException("Student not found"));
         List<Exam> exams = examRepository.findByEnrolledStudentsContains(student);
-        return exams.stream().map(this::getExamResponse).collect(Collectors.toList());
+        return exams.stream().map(this::getExamResponseWithoutQuestions).collect(Collectors.toList());
+    }
+
+    public Optional<Exam> getExamById(Long id){
+        Optional<Exam> exam=examRepository.findById(id);
+        return exam;
     }
 
     public List<Exam> getALlExams(){
         return examRepository.findAll();
+    }
+
+    public boolean isExamIdValid(Long id){
+        return examRepository.existsById(id);
     }
 }

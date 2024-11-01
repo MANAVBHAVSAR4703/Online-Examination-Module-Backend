@@ -1,5 +1,6 @@
 package com.example.demo.controllers;
 
+import com.example.demo.models.Exam;
 import com.example.demo.models.User;
 import com.example.demo.responses.ExamResponse;
 import com.example.demo.services.ExamService;
@@ -10,12 +11,10 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Controller;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Optional;
 
 @RestController
 @PreAuthorize("hasRole('STUDENT')")
@@ -43,5 +42,24 @@ public class StudentController {
         List<ExamResponse> exams = examService.getExamsByStudent(user.getId());
         return ResponseEntity.ok(exams);
     }
+
+    @GetMapping("/getExamById/{id}")  // Use curly braces instead of colon
+    public ResponseEntity<ExamResponse> getExamById(@PathVariable Long id) {
+        try{
+        boolean isExamPresent=examService.isExamIdValid(id);
+        Optional<Exam> optionalExam  = examService.getExamById(id);
+        if(isExamPresent && optionalExam .isPresent()){
+            Exam exam = optionalExam.get();
+            ExamResponse examResponse = examService.getExamResponse(exam);
+            return ResponseEntity.ok(examResponse);
+        }
+        else {
+            return ResponseEntity.notFound().build();
+        }
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
+
 }
 

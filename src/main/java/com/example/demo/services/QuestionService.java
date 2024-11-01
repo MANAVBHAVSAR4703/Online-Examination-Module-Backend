@@ -43,6 +43,10 @@ public class QuestionService {
         return questionRepository.findAll();
     }
 
+    public List<Question> getAllQuestions(String category){
+        return questionRepository.findByCategory(category);
+    }
+
     public QuestionResponse<OptionResponse> getQuestionResponse(Question question){
         List<OptionResponse> optionResponses = question.getOptions().stream()
                 .map(option -> {

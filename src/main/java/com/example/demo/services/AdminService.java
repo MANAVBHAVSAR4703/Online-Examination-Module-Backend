@@ -57,4 +57,8 @@ public class AdminService {
         return studentRepository.findAll();
     }
 
+    public List<String> getDistinctColleges(){
+        return studentRepository.findDistinctColleges();
+    }
+
 }
