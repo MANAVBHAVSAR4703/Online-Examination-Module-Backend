@@ -10,4 +10,5 @@ import java.util.List;
 @Repository
 public interface ExamRepository extends JpaRepository<Exam,Long> {
     List<Exam> findByEnrolledStudentsContains(Student student);
+    List<Exam> findByIsCompleted(boolean isCompleted);
 }

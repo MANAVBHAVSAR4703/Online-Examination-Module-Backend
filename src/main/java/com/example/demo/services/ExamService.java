@@ -1,21 +1,20 @@
 package com.example.demo.services;
 
 import com.example.demo.Dto.ExamCreationDto;
-import com.example.demo.models.Exam;
-import com.example.demo.models.Question;
-import com.example.demo.models.Student;
-import com.example.demo.repositories.ExamRepository;
-import com.example.demo.repositories.QuestionRepository;
-import com.example.demo.repositories.StudentRepository;
+import com.example.demo.Dto.ExamResultDto;
+import com.example.demo.models.*;
+import com.example.demo.repositories.*;
 import com.example.demo.responses.ExamResponse;
 import com.example.demo.responses.OptionResponse;
 import com.example.demo.responses.QuestionResponse;
 import com.example.demo.responses.StudentResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -30,6 +29,12 @@ public class ExamService {
 
     @Autowired
     private ExamRepository examRepository;
+
+    @Autowired
+    private UserRepository userRepository;
+
+    @Autowired
+    private ExamResultRepository examResultRepository;
 
     public Exam createExam(ExamCreationDto examDto) {
         // Validate duration
@@ -167,8 +172,14 @@ public class ExamService {
     public List<ExamResponse> getExamsByStudent(Long studentId) {
         Student student = studentRepository.findById(studentId)
                 .orElseThrow(() -> new RuntimeException("Student not found"));
+
         List<Exam> exams = examRepository.findByEnrolledStudentsContains(student);
-        return exams.stream().map(this::getExamResponseWithoutQuestions).collect(Collectors.toList());
+
+        List<Exam> remainingExams = exams.stream()
+                .filter(exam -> !exam.isCompleted() && examResultRepository.findByStudentIdAndExamId(studentId, exam.getId()).isEmpty())
+                .toList();
+
+        return remainingExams.stream().map(this::getExamResponseWithoutQuestions).collect(Collectors.toList());
     }
 
     public Optional<Exam> getExamById(Long id){
@@ -182,5 +193,52 @@ public class ExamService {
 
     public boolean isExamIdValid(Long id){
         return examRepository.existsById(id);
+    }
+
+    public ExamResult submitExam(ExamResultDto examSubmission) {
+        Optional<Exam> optionalExam = examRepository.findById(examSubmission.getExamId());
+        if (optionalExam.isEmpty()) {
+            throw new IllegalArgumentException("Exam not found");
+        }
+        Exam exam = optionalExam.get();
+        Optional<User> studentUserOptional = userRepository.findByEmail(examSubmission.getStudentEmail());
+        if (studentUserOptional.isEmpty()) {
+            throw new IllegalArgumentException("Student not found");
+        }
+        User student = studentUserOptional.get();
+
+        int correctAnswers = 0;
+        for (ExamResultDto.QuestionResponseDto response : examSubmission.getResponses()) {
+            Question question = questionRepository.findById(response.getQuestionId())
+                    .orElseThrow(() -> new IllegalArgumentException("Question not found: " + response.getQuestionId()));
+
+            if (question.getCorrectOptionIndex() == response.getSelectedOption()) {
+                correctAnswers++;
+            }
+        }
+
+        boolean isPassed = ((double) correctAnswers / exam.getQuestions().size()) * 100 >= exam.getPassingCriteria();
+
+        ExamResult examResult = new ExamResult();
+        examResult.setStudent(student);
+        examResult.setExam(exam);
+        examResult.setCorrectAnswerTotal(correctAnswers);
+        examResult.setPassed(isPassed);
+
+        return examResultRepository.save(examResult);
+    }
+
+    @Scheduled(fixedRate = 60000)
+    public void updateCompletedExams() {
+        List<Exam> exams = examRepository.findAll();
+        LocalDateTime now = LocalDateTime.now();
+
+        for (Exam exam : exams) {
+            LocalDateTime examEndTime = exam.getStartTime().plusMinutes(exam.getDuration());
+            if (now.isAfter(examEndTime) && !exam.isCompleted()) {
+                exam.setCompleted(true);
+                examRepository.save(exam);
+            }
+        }
     }
 }

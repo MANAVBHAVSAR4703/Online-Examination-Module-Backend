@@ -1,6 +1,8 @@
 package com.example.demo.controllers;
 
+import com.example.demo.Dto.ExamResultDto;
 import com.example.demo.models.Exam;
+import com.example.demo.models.ExamResult;
 import com.example.demo.models.User;
 import com.example.demo.responses.ExamResponse;
 import com.example.demo.services.ExamService;
@@ -11,6 +13,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Controller;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -61,5 +64,15 @@ public class StudentController {
         }
     }
 
+    @PostMapping("/submitExam")
+    public ResponseEntity<?> submitExam(@Validated @RequestBody ExamResultDto examResultDto){
+        try{
+            System.out.println(examResultDto);
+            ExamResult examResult=examService.submitExam(examResultDto);
+            return ResponseEntity.ok(examResult);
+        }catch (Exception e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
 }
 

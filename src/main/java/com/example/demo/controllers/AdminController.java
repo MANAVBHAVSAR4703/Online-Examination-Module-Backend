@@ -4,6 +4,8 @@ import com.example.demo.Dto.ExamCreationDto;
 import com.example.demo.Dto.QuestionDto;
 import com.example.demo.Dto.StudentDto;
 import com.example.demo.models.*;
+import com.example.demo.repositories.ExamRepository;
+import com.example.demo.repositories.ExamResultRepository;
 import com.example.demo.responses.*;
 import com.example.demo.services.AdminService;
 import com.example.demo.services.ExamService;
@@ -28,6 +30,12 @@ public class AdminController {
     private final AdminService adminService;
     private final QuestionService questionService;
     private final ExamService examService;
+
+    @Autowired
+    private ExamRepository examRepository;
+
+    @Autowired
+    private ExamResultRepository examResultRepository;
 
     @Autowired
     AdminController(AdminService adminService,QuestionService questionService,ExamService examService){
@@ -201,4 +209,32 @@ public class AdminController {
         }
     }
 
+    @GetMapping("/completed-exams")
+    public ResponseEntity<List<ExamResultResponse>> getCompletedExams() {
+        List<Exam> completedExams = examRepository.findByIsCompleted(true);
+
+        List<ExamResultResponse> examResponses = completedExams.stream().map(exam -> {
+            List<ExamResult> results = examResultRepository.findByExam(exam);
+            int totalPassed = (int) results.stream().filter(ExamResult::isPassed).count();
+
+            List<ExamResultResponse.StudentExamResultDto> studentResults = results.stream()
+                    .map(result -> {
+                        ExamResultResponse.StudentExamResultDto dto = new ExamResultResponse.StudentExamResultDto();
+                        dto.setStudentEmail(result.getStudent().getEmail());
+                        dto.setCorrectAnswerTotal(result.getCorrectAnswerTotal());
+                        dto.setPassed(result.isPassed());
+                        return dto;
+                    })
+                    .collect(Collectors.toList());
+
+            ExamResultResponse examResponseDto = new ExamResultResponse();
+            examResponseDto.setExamId(exam.getId());
+            examResponseDto.setExamName(exam.getTitle()); // Assuming you have a name field in your Exam entity
+            examResponseDto.setTotalPassed(totalPassed);
+            examResponseDto.setStudentResults(studentResults);
+            return examResponseDto;
+        }).collect(Collectors.toList());
+
+        return ResponseEntity.ok(examResponses);
+    }
 }
