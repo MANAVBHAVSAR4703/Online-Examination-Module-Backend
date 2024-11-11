@@ -38,7 +38,7 @@ public class User implements UserDetails {
     @Column(nullable = false)
     private String role;  // e.g., "ADMIN" or "STUDENT"
 
-    @OneToOne(mappedBy = "user", cascade = CascadeType.ALL)
+    @OneToOne(mappedBy = "user", cascade = CascadeType.ALL,orphanRemoval = true)
     private Student student;
 
     @CreationTimestamp

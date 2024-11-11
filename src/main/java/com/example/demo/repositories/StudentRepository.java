@@ -14,4 +14,5 @@ public interface StudentRepository extends JpaRepository<Student,Long> {
 
     @Query("SELECT DISTINCT s.college FROM Student s")
     List<String> findDistinctColleges();
+
 }

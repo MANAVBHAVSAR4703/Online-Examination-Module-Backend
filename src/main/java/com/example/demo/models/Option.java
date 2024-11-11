@@ -19,6 +19,6 @@ public class Option {
     private String text;
 
     @ManyToOne
-    @JoinColumn(name = "question_id")
+    @JoinColumn(name = "question_id", referencedColumnName = "id")
     private Question question;
 }

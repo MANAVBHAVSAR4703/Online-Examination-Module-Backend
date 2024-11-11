@@ -2,6 +2,8 @@ package com.example.demo.models;
 
 import jakarta.persistence.*;
 import lombok.*;
+import org.hibernate.annotations.OnDelete;
+import org.hibernate.annotations.OnDeleteAction;
 
 @Entity
 @Data
@@ -16,7 +18,7 @@ public class ExamResult {
 
     @ManyToOne
     @JoinColumn(name = "student_id", referencedColumnName = "id")
-    private User student    ;
+    private User student;
 
     @ManyToOne
     @JoinColumn(name = "exam_id", referencedColumnName = "id")

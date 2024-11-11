@@ -3,6 +3,7 @@ package com.example.demo.models;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @Entity
@@ -24,8 +25,12 @@ public class Question {
 
     @Column(nullable = false)
     @OneToMany(mappedBy = "question",cascade = CascadeType.ALL,orphanRemoval = true)
-    private List<Option> options;
+    private List<Option> options=new ArrayList<>();
 
     @Column(nullable = false)
     private int correctOptionIndex;
+
+    public void setOptions(List<Option> options) {
+        this.options.addAll(options);
+    }
 }

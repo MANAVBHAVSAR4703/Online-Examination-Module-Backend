@@ -12,14 +12,15 @@ import com.example.demo.services.ExamService;
 import com.example.demo.services.QuestionService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.client.HttpClientErrorException;
 
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 @RestController
@@ -236,5 +237,95 @@ public class AdminController {
         }).collect(Collectors.toList());
 
         return ResponseEntity.ok(examResponses);
+    }
+
+    @PostMapping("/editStudent")
+    public ResponseEntity<RegisterResponse<StudentResponse>>  editStudentInfo(@Validated @RequestBody StudentResponse studentResponse){
+        try{
+            Student student =adminService.editStudent(studentResponse);
+            StudentResponse editedStudentResponse = new StudentResponse(
+                    student.getUser().getEmail(),
+                    student.getUser().getFullName(),
+                    student.getEnrollNo(),
+                    student.getCollege(),
+                    student.getUser().getRole()
+            );
+            return ResponseEntity.ok(new RegisterResponse<>(
+                    true,
+                    "Student Updated Succesfully",
+                    editedStudentResponse));
+        }catch (Exception e){
+            return ResponseEntity.ok(new RegisterResponse<>(
+                    false,
+                    "Student Updation Failed",
+                    null));
+        }
+    }
+
+    @PostMapping("/deleteStudent")
+    public ResponseEntity<RegisterResponse<StudentResponse>>  deleteStudent(@Validated @RequestBody StudentResponse studentResponse){
+        try{
+            Student student =adminService.deleteStudent(studentResponse.getEmail());
+            StudentResponse editedStudentResponse = new StudentResponse(
+                    student.getUser().getEmail(),
+                    student.getUser().getFullName(),
+                    student.getEnrollNo(),
+                    student.getCollege(),
+                    student.getUser().getRole()
+            );
+            return ResponseEntity.ok(new RegisterResponse<>(
+                    true,
+                    "Student Deleted Succesfully",
+                    editedStudentResponse));
+        }catch (Exception e){
+            return ResponseEntity.ok(new RegisterResponse<>(
+                    false,
+                    "Student Deletion Failed: "+e.getMessage(),
+                    null));
+        }
+    }
+
+    @PostMapping("/editQuestion")
+    public ResponseEntity<RegisterResponse<QuestionResponse<OptionResponse>>> editQuestion(@Validated @RequestBody QuestionResponse<OptionResponse> questionResponse){
+        try{
+            Question question =adminService.editQuestion(questionResponse);
+            return ResponseEntity.ok(new RegisterResponse<>(
+                    true,
+                    "Question Updated Succesfully",
+                    questionService.getQuestionResponse(question)));
+        }catch (Exception e){
+            return ResponseEntity.ok(new RegisterResponse<>(
+                    false,
+                    "Question Updation Failed:" +e.getMessage(),
+                    null));
+        }
+    }
+
+    @PostMapping("/deleteQuestion")
+    public ResponseEntity<RegisterResponse<QuestionResponse<OptionResponse>>> deleteStudent(@Validated @RequestBody QuestionResponse<OptionResponse> questionResponse) {
+        try {
+            Question question = adminService.deleteQuestionById(questionResponse.getId());
+            return ResponseEntity.ok(new RegisterResponse<>(
+                    true,
+                    "Question Deleted Successfully",
+                    questionService.getQuestionResponse(question)));
+        } catch (DataIntegrityViolationException e) {
+            // Check if the error message contains specific constraint information
+            if (e.getCause() != null && e.getCause().getMessage().contains("REFERENCE constraint")) {
+                return ResponseEntity.ok(new RegisterResponse<>(
+                        false,
+                        "Question Deletion Failed: Question Already Used in Exam. Try Deleting Exam First.",
+                        null));
+            }
+            return ResponseEntity.ok(new RegisterResponse<>(
+                    false,
+                    "Question Deletion Failed: Database constraint violation.",
+                    null));
+        } catch (Exception e) {
+            return ResponseEntity.ok(new RegisterResponse<>(
+                    false,
+                    "Question Deletion Failed: " + e.getMessage(),
+                    null));
+        }
     }
 }

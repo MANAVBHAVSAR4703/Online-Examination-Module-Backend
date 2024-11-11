@@ -1,15 +1,21 @@
 package com.example.demo.services;
 
 import com.example.demo.Dto.StudentDto;
-import com.example.demo.models.Student;
-import com.example.demo.models.User;
-import com.example.demo.repositories.StudentRepository;
-import com.example.demo.repositories.UserRepository;
+import com.example.demo.models.*;
+import com.example.demo.repositories.*;
+import com.example.demo.responses.OptionResponse;
+import com.example.demo.responses.QuestionResponse;
+import com.example.demo.responses.StudentResponse;
+import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.web.server.ResponseStatusException;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 @Service
 public class AdminService {
@@ -19,6 +25,18 @@ public class AdminService {
 
     @Autowired
     private StudentRepository studentRepository;
+
+    @Autowired
+    private QuestionRepository questionRepository;
+
+    @Autowired
+    private OptionRepository optionRepository;
+
+    @Autowired
+    private ExamResultRepository examResultRepository;
+
+    @Autowired
+    private ExamRepository examRepository;
 
     private final PasswordEncoder passwordEncoder;
 
@@ -59,6 +77,86 @@ public class AdminService {
 
     public List<String> getDistinctColleges(){
         return studentRepository.findDistinctColleges();
+    }
+
+    public Student editStudent(StudentResponse studentResponse) {
+        Student student = userRepository.findByEmail(studentResponse.getEmail())
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Student not found")).getStudent();
+
+        if (studentResponse.getFullName() != null) {
+            student.getUser().setFullName(studentResponse.getFullName());
+        }
+        if (studentResponse.getEmail() != null) {
+            student.getUser().setEmail(studentResponse.getEmail());
+        }
+        if (studentResponse.getEnrollNo() != 0) {
+            student.setEnrollNo(studentResponse.getEnrollNo());
+        }
+        if (studentResponse.getCollege() != null) {
+            student.setCollege(studentResponse.getCollege());
+        }
+
+        return studentRepository.save(student);
+    }
+
+    @Transactional
+    public Question editQuestion(QuestionResponse<OptionResponse> questionResponse) {
+        Question question = questionRepository.findById(questionResponse.getId())
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Question not found"));
+
+        if (questionResponse.getText() != null) {
+            question.setText(questionResponse.getText());
+        }
+        if (questionResponse.getCategory() != null) {
+            question.setCategory(questionResponse.getCategory());
+        }
+
+        question.setCorrectOptionIndex(questionResponse.getCorrectOptionIndex());
+
+        List<Option> updatedOptions = new ArrayList<>();
+
+        for (OptionResponse optionResponse : questionResponse.getOptions()) {
+            Option option;
+            if (optionResponse.getId() != null) {
+                option = optionRepository.findById(optionResponse.getId())
+                        .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Option not found"));
+                option.setText(optionResponse.getText());
+            } else {
+                option = new Option();
+                option.setText(optionResponse.getText());
+                option.setQuestion(question);
+            }
+            updatedOptions.add(option);
+        }
+
+        question.getOptions().clear();
+        question.setOptions(updatedOptions);
+        return questionRepository.save(question);
+    }
+
+    @Transactional
+    public Student deleteStudent(String email) {
+        Student student = userRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("Student not found")).getStudent();
+
+        List<Exam> enrolledExams = examRepository.findByEnrolledStudentsContains(student);
+        for (Exam exam : enrolledExams) {
+            exam.getEnrolledStudents().remove(student);
+            examRepository.save(exam);
+        }
+
+        examResultRepository.deleteByStudentId(student.getUser().getId());
+        studentRepository.delete(student);
+        userRepository.delete(student.getUser());
+    return student;
+    }
+
+    @Transactional
+    public Question deleteQuestionById(Long id) {
+        Question question = questionRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Student not found"));
+        questionRepository.delete(question);
+        return question;
     }
 
 }
