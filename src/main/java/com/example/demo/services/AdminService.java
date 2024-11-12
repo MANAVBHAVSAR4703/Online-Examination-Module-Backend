@@ -1,8 +1,10 @@
 package com.example.demo.services;
 
+import com.example.demo.Dto.ExamUpdateDto;
 import com.example.demo.Dto.StudentDto;
 import com.example.demo.models.*;
 import com.example.demo.repositories.*;
+import com.example.demo.responses.ExamResponse;
 import com.example.demo.responses.OptionResponse;
 import com.example.demo.responses.QuestionResponse;
 import com.example.demo.responses.StudentResponse;
@@ -159,4 +161,33 @@ public class AdminService {
         return question;
     }
 
+    @Transactional
+    public Exam editExam(ExamUpdateDto examResponse) {
+        Exam exam = examRepository.findById(examResponse.getId())
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Exam not found"));
+
+        if (examResponse.getTitle() != null) {
+            exam.setTitle(examResponse.getTitle());
+        }
+        if (examResponse.getStartTime() != null) {
+            exam.setStartTime(examResponse.getStartTime());
+        }
+        if (examResponse.getStartTime() != null) {
+            exam.setStartTime(examResponse.getStartTime());
+        }
+        if (examResponse.getDuration() != 0) {
+            exam.setDuration(examResponse.getDuration());
+        }
+        if (examResponse.getPassingCriteria() != 0) {
+            exam.setPassingCriteria(examResponse.getPassingCriteria());
+        }
+        return examRepository.save(exam);
+    }
+
+    @Transactional
+    public void deleteExamById(Long examId){
+        Exam exam= examRepository.findById(examId)
+                .orElseThrow(() -> new RuntimeException("Exam not found"));
+        examRepository.delete(exam);
+    }
 }

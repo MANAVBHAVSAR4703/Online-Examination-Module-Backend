@@ -1,6 +1,7 @@
 package com.example.demo.controllers;
 
 import com.example.demo.Dto.ExamCreationDto;
+import com.example.demo.Dto.ExamUpdateDto;
 import com.example.demo.Dto.QuestionDto;
 import com.example.demo.Dto.StudentDto;
 import com.example.demo.models.*;
@@ -20,7 +21,6 @@ import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
-import java.util.Objects;
 import java.util.stream.Collectors;
 
 @RestController
@@ -328,4 +328,35 @@ public class AdminController {
                     null));
         }
     }
+
+    @PostMapping("/editExam")
+    public ResponseEntity<RegisterResponse<ExamResponse>> editExam(@Validated @RequestBody ExamUpdateDto examUpdateDto){
+        try{
+            Exam exam=adminService.editExam(examUpdateDto);
+            return ResponseEntity.ok(new RegisterResponse<>(
+                    true,
+                    "Exam Updated Succesfully", examService.getExamResponse(exam)));
+        }catch (Exception e){
+            return ResponseEntity.ok(new RegisterResponse<>(
+                    false,
+                    "Exam Updation Failed:" +e.getMessage(),
+                    null));
+        }
+    }
+
+    @PostMapping("/deleteExam/{id}")
+    public ResponseEntity<RegisterResponse<?>> deleteExam(@PathVariable Long id){
+        try{
+            adminService.deleteExamById(id);
+            return ResponseEntity.ok(new RegisterResponse<>(
+                    true,
+                    "Exam Deleted Succesfully",null));
+        }catch (Exception e){
+            return ResponseEntity.ok(new RegisterResponse<>(
+                    false,
+                    "Exam Deletion Failed: " +e.getMessage(),
+                    null));
+        }
+    }
+
 }
