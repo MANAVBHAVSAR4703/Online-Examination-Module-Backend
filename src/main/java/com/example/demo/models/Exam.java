@@ -38,4 +38,13 @@ public class Exam {
             joinColumns = @JoinColumn(name = "exam_id"),
             inverseJoinColumns = @JoinColumn(name = "question_id")
     )
-    private List<Question> questions;}
+    private List<Question> questions;
+
+    @ManyToMany
+    @JoinTable(
+            name = "exam_programming_questions",
+            joinColumns=@JoinColumn(name = "exam_id"),
+            inverseJoinColumns = @JoinColumn(name = "programming_question_id")
+    )
+    private List<ProgrammingQuestion> programmingQuestions;
+}

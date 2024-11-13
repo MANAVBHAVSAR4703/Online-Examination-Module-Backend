@@ -1,9 +1,6 @@
 package com.example.demo.controllers;
 
-import com.example.demo.Dto.ExamCreationDto;
-import com.example.demo.Dto.ExamUpdateDto;
-import com.example.demo.Dto.QuestionDto;
-import com.example.demo.Dto.StudentDto;
+import com.example.demo.Dto.*;
 import com.example.demo.models.*;
 import com.example.demo.repositories.ExamRepository;
 import com.example.demo.repositories.ExamResultRepository;
@@ -92,6 +89,23 @@ public class AdminController {
         }
     }
 
+    @PostMapping("/createProgrammingQuestion")
+    public ResponseEntity<RegisterResponse<ProgrammingQuestion>> createProgrammingQuestion(@Validated @RequestBody ProgrammingQuestionDto programmingQuestionDto){
+        try {
+            ProgrammingQuestion createdProgrammingQuestion = questionService.createProgrammingQuestion(programmingQuestionDto);
+            return ResponseEntity.ok(new RegisterResponse<>(
+                    true,
+                    "Programming question added successfully",
+                    createdProgrammingQuestion));
+
+        } catch (Exception e) {
+            return ResponseEntity.ok(new RegisterResponse<>(
+                    false,
+                    "Programming question addition failed: "+e.getMessage(),
+                    null));
+        }
+    }
+
     @PostMapping("/createExam")
     public ResponseEntity<?> createExam(@Validated @RequestBody ExamCreationDto examDto) {
         try{
@@ -172,6 +186,22 @@ public class AdminController {
                     true,
                     "Questions Fetched Successfully",
                     questionResponseList));
+        }catch (Exception e){
+            return ResponseEntity.ok(new RegisterResponse<>(
+                    true,
+                    "Questions Fetching Failed",
+                    null));
+        }
+    }
+
+    @GetMapping("/getProgrammingQuestions")
+    public ResponseEntity<RegisterResponse<List<ProgrammingQuestion>>> getProgrammingQuestions(){
+        try {
+            List<ProgrammingQuestion> programmingQuestionList=questionService.getAllProgrammingQuestions();
+            return ResponseEntity.ok(new RegisterResponse<>(
+                    true,
+                    "Programming Questions Fetched Successfully",
+                    programmingQuestionList));
         }catch (Exception e){
             return ResponseEntity.ok(new RegisterResponse<>(
                     true,

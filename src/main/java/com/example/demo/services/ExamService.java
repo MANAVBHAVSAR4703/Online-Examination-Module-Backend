@@ -25,6 +25,9 @@ public class ExamService {
     private QuestionRepository questionRepository;
 
     @Autowired
+    private ProgrammingQuestionRepository programmingQuestionRepository;
+
+    @Autowired
     private StudentRepository studentRepository;
 
     @Autowired
@@ -37,7 +40,6 @@ public class ExamService {
     private ExamResultRepository examResultRepository;
 
     public Exam createExam(ExamCreationDto examDto) {
-        // Validate duration
         if (examDto.getDuration() <= 0) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Duration must be a positive number.");
         }
@@ -53,6 +55,9 @@ public class ExamService {
         Collection<? extends Question> technicalQuestions = questionRepository.findRandomQuestionsByCategory(
                 "Technical",
                 examDto.getTechnicalQuestionsCount());
+        Collection<? extends ProgrammingQuestion> programmingSectionQuestions=programmingQuestionRepository.findRandomQuestions(
+                examDto.getProgrammingSectionQuestionsCount()
+        );
 
         if (logicalQuestions.size() < examDto.getLogicalQuestionsCount()) {
             throw new IllegalArgumentException(
@@ -72,7 +77,12 @@ public class ExamService {
                             ", Available: " + technicalQuestions.size());
         }
 
-        // Get the questions and set them in the exam
+        if (programmingSectionQuestions.size() < examDto.getProgrammingSectionQuestionsCount()) {
+            throw new IllegalArgumentException(
+                    "Not enough Programming Section questions available. Required: " + examDto.getProgrammingSectionQuestionsCount() +
+                            ", Available: " + programmingSectionQuestions.size());
+        }
+
         Exam exam = new Exam();
         exam.setTitle(examDto.getTitle());
         exam.setStartTime(examDto.getStartTime());
@@ -86,7 +96,9 @@ public class ExamService {
         questions.addAll(technicalQuestions);
         exam.setQuestions(questions);
 
-        // Validate college and fetch students
+        List<ProgrammingQuestion> programmingSectionQuestionList=new ArrayList<>(programmingSectionQuestions);
+        exam.setProgrammingQuestions(programmingSectionQuestionList);
+
         List<Student> students = studentRepository.findByCollege(examDto.getCollege());
         if (students.isEmpty()) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
@@ -94,12 +106,10 @@ public class ExamService {
         }
         exam.setEnrolledStudents(students);
 
-        // Save and return the exam
         return examRepository.save(exam);
     }
 
     public ExamResponse getExamResponse(Exam exam)  {
-        // Map the Exam entity to ExamResponse DTO
         ExamResponse examResponse = new ExamResponse();
         examResponse.setId(exam.getId());
         examResponse.setTitle(exam.getTitle());
@@ -108,7 +118,6 @@ public class ExamService {
         examResponse.setPassingCriteria(exam.getPassingCriteria());
         examResponse.setCompleted(exam.isCompleted());
 
-        // Map each Student to StudentResponse
         List<StudentResponse> studentResponses = exam.getEnrolledStudents().stream()
                 .map(student -> new StudentResponse(
                         student.getUser().getEmail(),
@@ -119,7 +128,6 @@ public class ExamService {
                 .collect(Collectors.toList());
         examResponse.setEnrolledStudents(studentResponses);
 
-        // Map each Question to QuestionResponse
         List<QuestionResponse<OptionResponse>> questionResponses = exam.getQuestions().stream()
                 .map(question -> {
                     List<OptionResponse> optionResponses = question.getOptions().stream()
@@ -141,7 +149,7 @@ public class ExamService {
                 })
                 .collect(Collectors.toList());
         examResponse.setQuestions(questionResponses);
-
+        examResponse.setProgrammingQuestions(exam.getProgrammingQuestions());
         return examResponse;
     }
 

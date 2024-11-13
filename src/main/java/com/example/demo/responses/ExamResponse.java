@@ -1,5 +1,6 @@
 package com.example.demo.responses;
 
+import com.example.demo.models.ProgrammingQuestion;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -17,4 +18,5 @@ public class ExamResponse {
     private boolean isCompleted;
     private List<StudentResponse> enrolledStudents;
     private List<QuestionResponse<OptionResponse>> questions;
+    private List<ProgrammingQuestion> programmingQuestions;
 }

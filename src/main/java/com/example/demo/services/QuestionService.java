@@ -1,8 +1,11 @@
 package com.example.demo.services;
 
+import com.example.demo.Dto.ProgrammingQuestionDto;
 import com.example.demo.Dto.QuestionDto;
 import com.example.demo.models.Option;
+import com.example.demo.models.ProgrammingQuestion;
 import com.example.demo.models.Question;
+import com.example.demo.repositories.ProgrammingQuestionRepository;
 import com.example.demo.repositories.QuestionRepository;
 import com.example.demo.responses.OptionResponse;
 import com.example.demo.responses.QuestionResponse;
@@ -17,6 +20,9 @@ public class QuestionService {
 
     @Autowired
     private QuestionRepository questionRepository;
+
+    @Autowired
+    private ProgrammingQuestionRepository programmingQuestionRepository;
 
     public Question createQuestion(QuestionDto questionDto){
         if(questionDto.getOptions().size()<2 || questionDto.getOptions().size()>4){
@@ -39,8 +45,20 @@ public class QuestionService {
         return questionRepository.save(question);
     }
 
+    public ProgrammingQuestion createProgrammingQuestion(ProgrammingQuestionDto programmingQuestionDto){
+        ProgrammingQuestion programmingQuestion=new ProgrammingQuestion();
+        programmingQuestion.setCode(programmingQuestionDto.getCode());
+        programmingQuestion.setText(programmingQuestionDto.getText());
+        programmingQuestion.setDifficulty(programmingQuestionDto.getDifficulty());
+        return programmingQuestionRepository.save(programmingQuestion);
+    }
+
     public List<Question> getAllQuestions(){
         return questionRepository.findAll();
+    }
+
+    public List<ProgrammingQuestion> getAllProgrammingQuestions(){
+        return programmingQuestionRepository.findAll();
     }
 
     public List<Question> getAllQuestions(String category){

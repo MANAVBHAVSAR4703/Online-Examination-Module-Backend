@@ -17,5 +17,6 @@ public class ExamCreationDto {
     private int logicalQuestionsCount;
     private int technicalQuestionsCount;
     private int programmingQuestionsCount;
+    private int programmingSectionQuestionsCount;
     private String college; // college of students to enroll
 }
