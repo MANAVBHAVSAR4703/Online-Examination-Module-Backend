@@ -67,7 +67,6 @@ public class StudentController {
     @PostMapping("/submitExam")
     public ResponseEntity<?> submitExam(@Validated @RequestBody ExamResultDto examResultDto){
         try{
-            System.out.println(examResultDto);
             ExamResult examResult=examService.submitExam(examResultDto);
             return ResponseEntity.ok(examResult);
         }catch (Exception e) {

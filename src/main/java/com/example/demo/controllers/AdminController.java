@@ -332,7 +332,7 @@ public class AdminController {
     }
 
     @PostMapping("/deleteQuestion")
-    public ResponseEntity<RegisterResponse<QuestionResponse<OptionResponse>>> deleteStudent(@Validated @RequestBody QuestionResponse<OptionResponse> questionResponse) {
+    public ResponseEntity<RegisterResponse<QuestionResponse<OptionResponse>>> deleteQuestion(@Validated @RequestBody QuestionResponse<OptionResponse> questionResponse) {
         try {
             Question question = adminService.deleteQuestionById(questionResponse.getId());
             return ResponseEntity.ok(new RegisterResponse<>(
@@ -385,6 +385,49 @@ public class AdminController {
             return ResponseEntity.ok(new RegisterResponse<>(
                     false,
                     "Exam Deletion Failed: " +e.getMessage(),
+                    null));
+        }
+    }
+
+    @PostMapping("/editProgrammingQuestion")
+    public ResponseEntity<RegisterResponse<ProgrammingQuestion>> editProgrammingQuestion(@Validated @RequestBody ProgrammingQuestion programmingQuestion){
+        try{
+            ProgrammingQuestion editedProgrammingQuestion =adminService.editProgrammingQuestion(programmingQuestion);
+            return ResponseEntity.ok(new RegisterResponse<>(
+                    true,
+                    "Question Updated Succesfully",
+                    editedProgrammingQuestion));
+        }catch (Exception e){
+            return ResponseEntity.ok(new RegisterResponse<>(
+                    false,
+                    "Programming Question Updation Failed:" +e.getMessage(),
+                    null));
+        }
+    }
+
+    @PostMapping("/deleteProgrammingQuestion/{id}")
+    public ResponseEntity<RegisterResponse<ProgrammingQuestion>> deleteProgrammingQuestion(@PathVariable Long id) {
+        try {
+            ProgrammingQuestion programmingQuestion = adminService.deleteProgrammingQuestionById(id);
+            return ResponseEntity.ok(new RegisterResponse<>(
+                    true,
+                    "Programming Question Deleted Successfully",
+                    programmingQuestion));
+        } catch (DataIntegrityViolationException e) {
+            if (e.getCause() != null && e.getCause().getMessage().contains("REFERENCE constraint")) {
+                return ResponseEntity.ok(new RegisterResponse<>(
+                        false,
+                        "Programming Question Deletion Failed: Question Already Used in Exam. Try Deleting Exam First.",
+                        null));
+            }
+            return ResponseEntity.ok(new RegisterResponse<>(
+                    false,
+                    "Programming Question Deletion Failed: Database constraint violation.",
+                    null));
+        } catch (Exception e) {
+            return ResponseEntity.ok(new RegisterResponse<>(
+                    false,
+                    "Programming Question Deletion Failed: " + e.getMessage(),
                     null));
         }
     }

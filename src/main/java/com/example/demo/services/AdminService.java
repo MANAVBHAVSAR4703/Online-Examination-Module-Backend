@@ -29,6 +29,9 @@ public class AdminService {
     private StudentRepository studentRepository;
 
     @Autowired
+    private ProgrammingQuestionRepository programmingQuestionRepository;
+
+    @Autowired
     private QuestionRepository questionRepository;
 
     @Autowired
@@ -156,7 +159,7 @@ public class AdminService {
     @Transactional
     public Question deleteQuestionById(Long id) {
         Question question = questionRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Student not found"));
+                .orElseThrow(() -> new RuntimeException("Question not found"));
         questionRepository.delete(question);
         return question;
     }
@@ -189,5 +192,23 @@ public class AdminService {
         Exam exam= examRepository.findById(examId)
                 .orElseThrow(() -> new RuntimeException("Exam not found"));
         examRepository.delete(exam);
+    }
+
+    @Transactional
+    public ProgrammingQuestion editProgrammingQuestion(ProgrammingQuestion programmingQuestion) {
+        ProgrammingQuestion updatedProgrammingQuestion = programmingQuestionRepository.findById(programmingQuestion.getId())
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Programming Question not found"));
+        updatedProgrammingQuestion.setDifficulty(programmingQuestion.getDifficulty());
+        updatedProgrammingQuestion.setText(programmingQuestion.getText());
+        updatedProgrammingQuestion.setCode(programmingQuestion.getCode());
+        return programmingQuestionRepository.save(updatedProgrammingQuestion);
+    }
+
+    @Transactional
+    public ProgrammingQuestion deleteProgrammingQuestionById(Long id) {
+        ProgrammingQuestion programmingQuestion = programmingQuestionRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Programming Question not found"));
+        programmingQuestionRepository.delete(programmingQuestion);
+        return programmingQuestion;
     }
 }
