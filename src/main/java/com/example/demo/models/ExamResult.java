@@ -1,9 +1,13 @@
 package com.example.demo.models;
 
+import com.example.demo.Dto.ExamResultDto;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.OnDelete;
 import org.hibernate.annotations.OnDeleteAction;
+import org.hibernate.annotations.Type;
+
+import java.util.List;
 
 @Entity
 @Data
@@ -23,6 +27,9 @@ public class ExamResult {
     @ManyToOne
     @JoinColumn(name = "exam_id", referencedColumnName = "id")
     private Exam exam;
+
+    @OneToMany(mappedBy = "examResult", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<ProgrammingQuestionResponse> programmingQuestionResponses;
 
     private int correctAnswerTotal;
     private boolean isPassed;

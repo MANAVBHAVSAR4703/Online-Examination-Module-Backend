@@ -209,6 +209,7 @@ public class ExamService {
             throw new IllegalArgumentException("Exam not found");
         }
         Exam exam = optionalExam.get();
+
         Optional<User> studentUserOptional = userRepository.findByEmail(examSubmission.getStudentEmail());
         if (studentUserOptional.isEmpty()) {
             throw new IllegalArgumentException("Student not found");
@@ -232,6 +233,21 @@ public class ExamService {
         examResult.setExam(exam);
         examResult.setCorrectAnswerTotal(correctAnswers);
         examResult.setPassed(isPassed);
+
+        List<ProgrammingQuestionResponse> programmingQuestionResponsesList = new ArrayList<>();
+        for (ExamResultDto.ProgrammingQuestionDto response : examSubmission.getProgrammingQuestionResponses()) {
+            ProgrammingQuestion question = programmingQuestionRepository.findById(response.getQuestionId())
+                    .orElseThrow(() -> new IllegalArgumentException("Programming question not found: " + response.getQuestionId()));
+
+            ProgrammingQuestionResponse programmingQuestionResponse = new ProgrammingQuestionResponse();
+            programmingQuestionResponse.setQuestionId(question.getId());
+            programmingQuestionResponse.setCode(response.getRefCode());
+            programmingQuestionResponse.setRefCode(question.getCode());
+            programmingQuestionResponse.setExamResult(examResult);
+            programmingQuestionResponsesList.add(programmingQuestionResponse);
+        }
+
+        examResult.setProgrammingQuestionResponses(programmingQuestionResponsesList);
 
         return examResultRepository.save(examResult);
     }

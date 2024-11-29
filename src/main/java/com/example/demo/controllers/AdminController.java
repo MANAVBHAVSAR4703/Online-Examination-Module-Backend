@@ -4,6 +4,7 @@ import com.example.demo.Dto.*;
 import com.example.demo.models.*;
 import com.example.demo.repositories.ExamRepository;
 import com.example.demo.repositories.ExamResultRepository;
+import com.example.demo.repositories.ProgrammingQuestionRepository;
 import com.example.demo.responses.*;
 import com.example.demo.services.AdminService;
 import com.example.demo.services.ExamService;
@@ -17,6 +18,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -34,6 +36,10 @@ public class AdminController {
 
     @Autowired
     private ExamResultRepository examResultRepository;
+
+    @Autowired
+    private ProgrammingQuestionRepository programmingQuestionRepository;
+
 
     @Autowired
     AdminController(AdminService adminService,QuestionService questionService,ExamService examService){
@@ -252,6 +258,15 @@ public class AdminController {
                     .map(result -> {
                         ExamResultResponse.StudentExamResultDto dto = new ExamResultResponse.StudentExamResultDto();
                         dto.setStudentEmail(result.getStudent().getEmail());
+                        List<ExamResultResponse.ProgrammingResponse> programmingResponsesList=result.getProgrammingQuestionResponses().stream().map(progResult->{
+                            ExamResultResponse.ProgrammingResponse programmingResponse=new ExamResultResponse.ProgrammingResponse();
+                            programmingResponse.setQuestion(programmingQuestionRepository.findById(progResult.getQuestionId()).
+                                    orElseThrow(() -> new RuntimeException("Programming Question not found")));
+                            programmingResponse.setCode(progResult.getCode());
+                            programmingResponse.setRefCode(progResult.getRefCode());
+                            return programmingResponse;
+                        }).collect(Collectors.toList());
+                        dto.setProgrammingQuestionResponses(programmingResponsesList);
                         dto.setCorrectAnswerTotal(result.getCorrectAnswerTotal());
                         dto.setPassed(result.isPassed());
                         return dto;
@@ -260,7 +275,9 @@ public class AdminController {
 
             ExamResultResponse examResponseDto = new ExamResultResponse();
             examResponseDto.setExamId(exam.getId());
-            examResponseDto.setExamName(exam.getTitle()); // Assuming you have a name field in your Exam entity
+            examResponseDto.setExamStartTime(exam.getStartTime());
+            examResponseDto.setExamDuration(exam.getDuration());
+            examResponseDto.setExamName(exam.getTitle());
             examResponseDto.setTotalPassed(totalPassed);
             examResponseDto.setStudentResults(studentResults);
             return examResponseDto;

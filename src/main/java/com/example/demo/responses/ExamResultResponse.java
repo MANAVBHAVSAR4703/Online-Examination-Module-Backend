@@ -1,20 +1,32 @@
 package com.example.demo.responses;
 
+import com.example.demo.models.ProgrammingQuestion;
 import lombok.Data;
 
+import java.time.LocalDateTime;
+import java.util.Date;
 import java.util.List;
 
 @Data
 public class ExamResultResponse {
     private Long examId;
-    private String examName; // Assuming you have a name for the exam
-    private int totalPassed; // Number of students who passed
-    private List<StudentExamResultDto> studentResults; // List of student results
+    private LocalDateTime examStartTime;
+    private int examDuration;
+    private String examName;
+    private int totalPassed;
+    private List<StudentExamResultDto> studentResults;
 
     @Data
     public static class StudentExamResultDto {
-        private String studentEmail; // Student's email
-        private int correctAnswerTotal; // Total correct answers
-        private boolean isPassed; // Pass/Fail status
+        private String studentEmail;
+        private int correctAnswerTotal;
+        private List<ProgrammingResponse> programmingQuestionResponses;
+        private boolean isPassed;
+    }
+    @Data
+    public static class ProgrammingResponse{
+        private ProgrammingQuestion question;
+        private String code;
+        private String refCode;
     }
 }
