@@ -47,4 +47,14 @@ public class Exam {
             inverseJoinColumns = @JoinColumn(name = "programming_question_id")
     )
     private List<ProgrammingQuestion> programmingQuestions;
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private Exam.Difficulty difficulty;
+
+    public enum Difficulty {
+        EASY,
+        MEDIUM,
+        HARD
+    }
 }

@@ -8,6 +8,7 @@ import com.example.demo.repositories.ProgrammingQuestionRepository;
 import com.example.demo.responses.*;
 import com.example.demo.services.AdminService;
 import com.example.demo.services.ExamService;
+import com.example.demo.services.MonitorService;
 import com.example.demo.services.QuestionService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -17,8 +18,9 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
-import java.util.ArrayList;
+import java.util.Base64;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -30,6 +32,7 @@ public class AdminController {
     private final AdminService adminService;
     private final QuestionService questionService;
     private final ExamService examService;
+    private final MonitorService monitorService;
 
     @Autowired
     private ExamRepository examRepository;
@@ -40,12 +43,12 @@ public class AdminController {
     @Autowired
     private ProgrammingQuestionRepository programmingQuestionRepository;
 
-
     @Autowired
-    AdminController(AdminService adminService,QuestionService questionService,ExamService examService){
+    AdminController(AdminService adminService,QuestionService questionService,ExamService examService,MonitorService monitorService){
         this.adminService=adminService;
         this.questionService=questionService;
         this.examService=examService;
+        this.monitorService=monitorService;
     }
 
     @GetMapping("/hello")
@@ -77,14 +80,13 @@ public class AdminController {
     }
 
     @PostMapping("/createQuestion")
-    public ResponseEntity<?> createQuestion(@Validated @RequestBody QuestionDto questionDto){
+    public ResponseEntity<?> createQuestion(@Validated @RequestPart QuestionDto question,@RequestPart(required = false) MultipartFile imageFile){
         try {
-            Question createdQuestion = questionService.createQuestion(questionDto);
+            Question createdQuestion = imageFile==null?questionService.createQuestion(question):questionService.createQuestion(question,imageFile);
             return ResponseEntity.ok(new RegisterResponse<>(
                     true,
                     "Question added successfully",
                     questionService.getQuestionResponse(createdQuestion)));
-
         } catch (Exception e) {
             RegisterResponse<Void> response = new RegisterResponse<>(
                     false,
@@ -333,13 +335,14 @@ public class AdminController {
     }
 
     @PostMapping("/editQuestion")
-    public ResponseEntity<RegisterResponse<QuestionResponse<OptionResponse>>> editQuestion(@Validated @RequestBody QuestionResponse<OptionResponse> questionResponse){
+    public ResponseEntity<RegisterResponse<QuestionResponse<OptionResponse>>> editQuestion(@Validated @RequestPart QuestionResponse<OptionResponse> question,
+                                                                                           @RequestPart(required = false) MultipartFile imageFile){
         try{
-            Question question =adminService.editQuestion(questionResponse);
+            Question question1 =imageFile==null?adminService.editQuestion(question):adminService.editQuestion(question,imageFile);
             return ResponseEntity.ok(new RegisterResponse<>(
                     true,
                     "Question Updated Succesfully",
-                    questionService.getQuestionResponse(question)));
+                    questionService.getQuestionResponse(question1)));
         }catch (Exception e){
             return ResponseEntity.ok(new RegisterResponse<>(
                     false,
@@ -347,7 +350,6 @@ public class AdminController {
                     null));
         }
     }
-
     @PostMapping("/deleteQuestion")
     public ResponseEntity<RegisterResponse<QuestionResponse<OptionResponse>>> deleteQuestion(@Validated @RequestBody QuestionResponse<OptionResponse> questionResponse) {
         try {
@@ -449,4 +451,20 @@ public class AdminController {
         }
     }
 
+    @GetMapping("/getMonitorImages/{email}/{examId}")
+    public ResponseEntity<?> getMonitorData(@PathVariable String  email,@PathVariable Long examId) {
+        try {
+            List<MonitorImage> monitorImages=monitorService.FilterByEmailAndExamId(email,examId);
+            List<MonitorImageResponse> monitorImageResponseList=monitorImages.stream().map(monitorImage -> {
+                MonitorImageResponse monitorImageResponse=new MonitorImageResponse();
+                monitorImageResponse.setImage(monitorImage.getImage());
+                monitorImageResponse.setId(monitorImage.getId());
+                monitorImageResponse.setCaptureTime(monitorImage.getCaptureTime());
+                return monitorImageResponse;
+            }).toList();
+            return ResponseEntity.ok(monitorImageResponseList);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error saving image."+e.getMessage());
+        }
+    }
 }

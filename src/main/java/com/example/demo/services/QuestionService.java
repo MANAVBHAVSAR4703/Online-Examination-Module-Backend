@@ -11,7 +11,9 @@ import com.example.demo.responses.OptionResponse;
 import com.example.demo.responses.QuestionResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -24,7 +26,7 @@ public class QuestionService {
     @Autowired
     private ProgrammingQuestionRepository programmingQuestionRepository;
 
-    public Question createQuestion(QuestionDto questionDto){
+    public Question createQuestion(QuestionDto questionDto, MultipartFile imageFile) throws IOException {
         if(questionDto.getOptions().size()<2 || questionDto.getOptions().size()>4){
             throw new IllegalArgumentException("Each question must have between 2 and 4 options.");
         }
@@ -42,6 +44,32 @@ public class QuestionService {
             options.add(option);
         }
         question.setOptions(options);
+        question.setDifficulty(questionDto.getDifficulty());
+        question.setImageData(imageFile.getBytes());
+        question.setImageName(imageFile.getOriginalFilename());
+        question.setImageType(imageFile.getContentType());
+        return questionRepository.save(question);
+    }
+
+    public Question createQuestion(QuestionDto questionDto) {
+        if(questionDto.getOptions().size()<2 || questionDto.getOptions().size()>4){
+            throw new IllegalArgumentException("Each question must have between 2 and 4 options.");
+        }
+        Question question=new Question();
+        question.setCategory(questionDto.getCategory());
+        question.setText(questionDto.getText());
+        question.setCorrectOptionIndex(questionDto.getCorrectOptionIndex());
+
+        List<Option> options=new ArrayList<>();
+
+        for(String optionText:questionDto.getOptions()){
+            Option option=new Option();
+            option.setText(optionText);
+            option.setQuestion(question);
+            options.add(option);
+        }
+        question.setOptions(options);
+        question.setDifficulty(questionDto.getDifficulty());
         return questionRepository.save(question);
     }
 
@@ -78,8 +106,12 @@ public class QuestionService {
                 question.getId(),
                 question.getText(),
                 question.getCategory(),
+                question.getDifficulty(),
                 optionResponses,
-                question.getCorrectOptionIndex()
+                question.getCorrectOptionIndex(),
+                question.getImageData(),
+                question.getImageName(),
+                question.getImageType()
         );
     }
 }

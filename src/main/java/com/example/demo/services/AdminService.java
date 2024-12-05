@@ -13,8 +13,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -115,7 +117,54 @@ public class AdminService {
         if (questionResponse.getCategory() != null) {
             question.setCategory(questionResponse.getCategory());
         }
+        if (questionResponse.getDifficulty() != null) {
+            question.setDifficulty(questionResponse.getDifficulty());
+        }
+        question.setCorrectOptionIndex(questionResponse.getCorrectOptionIndex());
 
+        List<Option> updatedOptions = new ArrayList<>();
+
+        for (OptionResponse optionResponse : questionResponse.getOptions()) {
+            Option option;
+            if (optionResponse.getId() != null) {
+                option = optionRepository.findById(optionResponse.getId())
+                        .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Option not found"));
+                option.setText(optionResponse.getText());
+            } else {
+                option = new Option();
+                option.setText(optionResponse.getText());
+                option.setQuestion(question);
+            }
+            updatedOptions.add(option);
+        }
+
+        question.getOptions().clear();
+        question.setOptions(updatedOptions);
+        question.setImageData(null);
+        question.setImageType(null);
+        question.setImageName(null);
+        return questionRepository.save(question);
+    }
+
+    @Transactional
+    public Question editQuestion(QuestionResponse<OptionResponse> questionResponse, MultipartFile imageFile) throws IOException {
+        Question question = questionRepository.findById(questionResponse.getId())
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Question not found"));
+
+        if (questionResponse.getText() != null) {
+            question.setText(questionResponse.getText());
+        }
+        if (questionResponse.getCategory() != null) {
+            question.setCategory(questionResponse.getCategory());
+        }
+        if(!imageFile.isEmpty()){
+            question.setImageName(imageFile.getOriginalFilename());
+            question.setImageType(imageFile.getContentType());
+            question.setImageData(imageFile.getBytes());
+        }
+        if (questionResponse.getDifficulty() != null) {
+            question.setDifficulty(questionResponse.getDifficulty());
+        }
         question.setCorrectOptionIndex(questionResponse.getCorrectOptionIndex());
 
         List<Option> updatedOptions = new ArrayList<>();

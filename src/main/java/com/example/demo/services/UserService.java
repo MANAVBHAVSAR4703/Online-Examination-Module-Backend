@@ -51,4 +51,9 @@ public class UserService implements UserDetailsService {
         return savedUser; // Return the saved user object
     }
 
+    public User getUserByEmail(String email){
+        User user=userRepo.findByEmail(email).orElseThrow(()->new RuntimeException("User Not Found"));
+        return user;
+    }
+
 }

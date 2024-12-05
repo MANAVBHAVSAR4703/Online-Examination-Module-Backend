@@ -1,12 +1,16 @@
 package com.example.demo.controllers;
 
 import com.example.demo.Dto.ExamResultDto;
+import com.example.demo.Dto.MonitorDataDto;
 import com.example.demo.models.Exam;
 import com.example.demo.models.ExamResult;
+import com.example.demo.models.MonitorImage;
 import com.example.demo.models.User;
 import com.example.demo.responses.ExamResponse;
 import com.example.demo.services.ExamService;
+import com.example.demo.services.MonitorService;
 import com.example.demo.services.UserService;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
@@ -16,6 +20,7 @@ import org.springframework.stereotype.Controller;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Base64;
 import java.util.List;
 import java.util.Optional;
 
@@ -26,10 +31,12 @@ public class StudentController {
 
     private final UserService userService;
     private final ExamService examService;
+    private final MonitorService monitorService;
 
-    StudentController(UserService userService,ExamService examService){
+    StudentController(UserService userService,ExamService examService,MonitorService monitorService){
         this.userService=userService;
         this.examService=examService;
+        this.monitorService=monitorService;
     }
 
     @GetMapping("/")
@@ -71,6 +78,17 @@ public class StudentController {
             return ResponseEntity.ok(examResult);
         }catch (Exception e) {
             return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
+
+    @PostMapping("/monitor")
+    public ResponseEntity<?> saveMonitorData(@Validated @RequestBody MonitorDataDto request) {
+        try {
+            byte[] imageBytes = Base64.getDecoder().decode(request.getImage());
+            monitorService.saveImage(request.getUserEmail(), imageBytes,request.getExamId());
+            return ResponseEntity.ok("Image saved successfully.");
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error saving image."+e.getMessage());
         }
     }
 }

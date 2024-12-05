@@ -40,20 +40,24 @@ public class ExamService {
     private ExamResultRepository examResultRepository;
 
     public Exam createExam(ExamCreationDto examDto) {
+
         if (examDto.getDuration() <= 0) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Duration must be a positive number.");
         }
 
-        Collection<? extends Question> logicalQuestions = questionRepository.findRandomQuestionsByCategory(
+        Collection<? extends Question> logicalQuestions = questionRepository.findRandomQuestionsByCategoryAndDifficulty(
                 "Logical",
+                Question.Difficulty.valueOf(examDto.getDifficulty().toString()),
                 examDto.getLogicalQuestionsCount());
 
-        Collection<? extends Question> programmingQuestions = questionRepository.findRandomQuestionsByCategory(
+        Collection<? extends Question> programmingQuestions = questionRepository.findRandomQuestionsByCategoryAndDifficulty(
                 "Programming",
+                Question.Difficulty.valueOf(examDto.getDifficulty().toString()),
                 examDto.getProgrammingQuestionsCount());
 
-        Collection<? extends Question> technicalQuestions = questionRepository.findRandomQuestionsByCategory(
+        Collection<? extends Question> technicalQuestions = questionRepository.findRandomQuestionsByCategoryAndDifficulty(
                 "Technical",
+                Question.Difficulty.valueOf(examDto.getDifficulty().toString()),
                 examDto.getTechnicalQuestionsCount());
         Collection<? extends ProgrammingQuestion> programmingSectionQuestions=programmingQuestionRepository.findRandomQuestions(
                 examDto.getProgrammingSectionQuestionsCount()
@@ -61,19 +65,19 @@ public class ExamService {
 
         if (logicalQuestions.size() < examDto.getLogicalQuestionsCount()) {
             throw new IllegalArgumentException(
-                    "Not enough logical questions available. Required: " + examDto.getLogicalQuestionsCount() +
+                    "Not enough logical questions available with "+examDto.getDifficulty().toString().toLowerCase()+ " difficulty. Required: " + examDto.getLogicalQuestionsCount() +
                             ", Available: " + logicalQuestions.size());
         }
 
         if (programmingQuestions.size() < examDto.getProgrammingQuestionsCount()) {
             throw new IllegalArgumentException(
-                    "Not enough programming questions available. Required: " + examDto.getProgrammingQuestionsCount() +
+                    "Not enough programming questions available with "+examDto.getDifficulty().toString().toLowerCase()+ " difficulty. Required: "+ examDto.getProgrammingQuestionsCount() +
                             ", Available: " + programmingQuestions.size());
         }
 
         if (technicalQuestions.size() < examDto.getTechnicalQuestionsCount()) {
             throw new IllegalArgumentException(
-                    "Not enough technical questions available. Required: " + examDto.getTechnicalQuestionsCount() +
+                    "Not enough technical questions available with "+examDto.getDifficulty().toString().toLowerCase()+ " difficulty. Required: " + examDto.getTechnicalQuestionsCount() +
                             ", Available: " + technicalQuestions.size());
         }
 
@@ -105,7 +109,7 @@ public class ExamService {
                     "No students found for the specified college: " + examDto.getCollege());
         }
         exam.setEnrolledStudents(students);
-
+        exam.setDifficulty(examDto.getDifficulty());
         return examRepository.save(exam);
     }
 
@@ -143,8 +147,12 @@ public class ExamService {
                             question.getId(),
                             question.getText(),
                             question.getCategory(),
+                            question.getDifficulty(),
                             optionResponses,
-                            question.getCorrectOptionIndex()
+                            question.getCorrectOptionIndex(),
+                            question.getImageData(),
+                            question.getImageName(),
+                            question.getImageType()
                     );
                 })
                 .collect(Collectors.toList());

@@ -3,6 +3,7 @@ package com.example.demo.models;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.sql.Blob;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -30,7 +31,24 @@ public class Question {
     @Column(nullable = false)
     private int correctOptionIndex;
 
+    @Lob
+    private byte[] imageData;
+
+    private String imageName;
+
+    private String imageType;
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private Question.Difficulty difficulty;
+
     public void setOptions(List<Option> options) {
         this.options.addAll(options);
+    }
+
+    public enum Difficulty {
+        EASY,
+        MEDIUM,
+        HARD
     }
 }

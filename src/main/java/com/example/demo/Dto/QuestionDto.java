@@ -1,5 +1,6 @@
 package com.example.demo.Dto;
 
+import com.example.demo.models.Question;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import lombok.*;
@@ -16,11 +17,14 @@ public class QuestionDto {
     private String text;
 
     @NotBlank
-    private String category; // "Logical", "Technical", or "Programming"
+    private String category;
 
     @NotNull
-    private List<String> options; // 2-4 options
+    private List<String> options;
 
     @NotNull
-    private Integer correctOptionIndex; // Index of the correct option
+    private Integer correctOptionIndex;
+
+    @NotNull
+    private Question.Difficulty difficulty;
 }
