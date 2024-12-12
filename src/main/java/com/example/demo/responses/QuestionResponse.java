@@ -17,7 +17,7 @@ import java.util.List;
 public class QuestionResponse<T> {
     private Long id;
     private String text;
-    private String category;
+    private Question.Category category;
     private Question.Difficulty difficulty;
     private List<T> options;
     private int correctOptionIndex;

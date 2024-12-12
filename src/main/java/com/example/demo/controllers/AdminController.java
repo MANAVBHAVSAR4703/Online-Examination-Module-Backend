@@ -6,10 +6,7 @@ import com.example.demo.repositories.ExamRepository;
 import com.example.demo.repositories.ExamResultRepository;
 import com.example.demo.repositories.ProgrammingQuestionRepository;
 import com.example.demo.responses.*;
-import com.example.demo.services.AdminService;
-import com.example.demo.services.ExamService;
-import com.example.demo.services.MonitorService;
-import com.example.demo.services.QuestionService;
+import com.example.demo.services.*;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataIntegrityViolationException;
@@ -20,6 +17,7 @@ import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
 import java.util.Base64;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -33,6 +31,7 @@ public class AdminController {
     private final QuestionService questionService;
     private final ExamService examService;
     private final MonitorService monitorService;
+    private final ExportService exportService;
 
     @Autowired
     private ExamRepository examRepository;
@@ -44,11 +43,12 @@ public class AdminController {
     private ProgrammingQuestionRepository programmingQuestionRepository;
 
     @Autowired
-    AdminController(AdminService adminService,QuestionService questionService,ExamService examService,MonitorService monitorService){
+    AdminController(AdminService adminService,QuestionService questionService,ExamService examService,MonitorService monitorService,ExportService exportService){
         this.adminService=adminService;
         this.questionService=questionService;
         this.examService=examService;
         this.monitorService=monitorService;
+        this.exportService=exportService;
     }
 
     @GetMapping("/hello")
@@ -221,9 +221,9 @@ public class AdminController {
     @GetMapping("/getOverview")
     public ResponseEntity<RegisterResponse<OverviewResponse>> getOverview(){
         try {
-            int LogicalQuestionsCount = questionService.getAllQuestions("Logical").size();
-            int TechnicalQuestionsCount = questionService.getAllQuestions("Technical").size();
-            int ProgrammingQuestionsCount = questionService.getAllQuestions("Programming").size();
+            int LogicalQuestionsCount = questionService.getAllQuestions("LOGICAL").size();
+            int TechnicalQuestionsCount = questionService.getAllQuestions("TECHNICAL").size();
+            int ProgrammingQuestionsCount = questionService.getAllQuestions("PROGRAMMING").size();
             int ExamCount = examService.getALlExams().size();
             int studentCount = adminService.getStudentsFromDb().size();
             int collegesCount = adminService.getDistinctColleges().size();
@@ -241,6 +241,7 @@ public class AdminController {
                     "Overview Fetched Successfully",
                     overviewResponse));
         }catch (Exception e){
+            System.out.println(e.getMessage());
             return ResponseEntity.ok(new RegisterResponse<>(
                     true,
                     "Overview Fetching Failed",
@@ -466,5 +467,41 @@ public class AdminController {
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error saving image."+e.getMessage());
         }
+    }
+
+    @PostMapping("/uploadQuestions")
+    public ResponseEntity<?> uploadQuestionsFromExcel(@Validated @RequestBody MultipartFile file){
+        String message = "";
+        if (exportService.checkFileType(file)) {
+            try {
+                List<Question> questionList=exportService.excelToQuestionList(file.getInputStream());
+                questionService.saveList(questionList);
+                message = "The Excel file is uploaded: " + file.getOriginalFilename();
+                return ResponseEntity.status(HttpStatus.OK).body(message);
+            } catch (Exception exp) {
+                message = "The Excel file is not upload: " + file.getOriginalFilename() + "!";
+                return ResponseEntity.status(HttpStatus.EXPECTATION_FAILED).body(message);
+            }
+        }
+        message = "Please upload an excel file!";
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(message);
+    }
+
+    @PostMapping("/uploadStudents")
+    public ResponseEntity<?> uploadStudentsFromExcel(@Validated @RequestBody MultipartFile file){
+        String message = "";
+        if (exportService.checkFileType(file)) {
+            try {
+                List<Student> studList=exportService.excelToStudentList(file.getInputStream());
+                adminService.saveList(studList);
+                message = "The Excel file is uploaded: " + file.getOriginalFilename();
+                return ResponseEntity.status(HttpStatus.OK).body(message);
+            } catch (Exception exp) {
+                message = "The Excel file is not upload: " + file.getOriginalFilename() + "!";
+                return ResponseEntity.status(HttpStatus.EXPECTATION_FAILED).body(message);
+            }
+        }
+        message = "Please upload an excel file!";
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(message);
     }
 }

@@ -36,7 +36,7 @@ public class User implements UserDetails {
     private String password;
 
     @Column(nullable = false)
-    private String role;  // e.g., "ADMIN" or "STUDENT"
+    private String role;
 
     @OneToOne(mappedBy = "user", cascade = CascadeType.ALL,orphanRemoval = true)
     private Student student;
@@ -48,9 +48,6 @@ public class User implements UserDetails {
     @UpdateTimestamp
     @Column(name = "updated_at")
     private Date updatedAt;
-
-//    @OneToOne(mappedBy = "user", cascade = CascadeType.ALL)
-//    private Student student;
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {

@@ -12,9 +12,9 @@ import java.util.Optional;
 
 @Repository
 public interface QuestionRepository extends JpaRepository<Question,Long> {
-    List<Question> findByCategory(String category);
+    List<Question> findByCategory(Question.Category category);
 
     @Query(value = "SELECT q FROM Question q WHERE q.category = :category AND q.difficulty= :difficulty ORDER BY FUNCTION('RAND') LIMIT :count")
-    Collection<? extends Question> findRandomQuestionsByCategoryAndDifficulty(@Param("category") String category, @Param("difficulty") Question.Difficulty difficulty,@Param("count") int count);
+    Collection<? extends Question> findRandomQuestionsByCategoryAndDifficulty(@Param("category") Question.Category category, @Param("difficulty") Question.Difficulty difficulty,@Param("count") int count);
 
 }

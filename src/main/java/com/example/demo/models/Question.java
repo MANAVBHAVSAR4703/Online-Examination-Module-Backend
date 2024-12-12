@@ -21,8 +21,9 @@ public class Question {
     @Column(nullable = false)
     private String text;
 
+    @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    private String category;
+    private Category category;
 
     @Column(nullable = false)
     @OneToMany(mappedBy = "question",cascade = CascadeType.ALL,orphanRemoval = true)
@@ -50,5 +51,11 @@ public class Question {
         EASY,
         MEDIUM,
         HARD
+    }
+
+    public enum Category {
+        TECHNICAL,
+        LOGICAL,
+        PROGRAMMING
     }
 }

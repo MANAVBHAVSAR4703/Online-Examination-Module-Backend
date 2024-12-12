@@ -31,7 +31,7 @@ public class QuestionService {
             throw new IllegalArgumentException("Each question must have between 2 and 4 options.");
         }
         Question question=new Question();
-        question.setCategory(questionDto.getCategory());
+        question.setCategory(Question.Category.valueOf(questionDto.getCategory()));
         question.setText(questionDto.getText());
         question.setCorrectOptionIndex(questionDto.getCorrectOptionIndex());
 
@@ -56,7 +56,7 @@ public class QuestionService {
             throw new IllegalArgumentException("Each question must have between 2 and 4 options.");
         }
         Question question=new Question();
-        question.setCategory(questionDto.getCategory());
+        question.setCategory(Question.Category.valueOf(questionDto.getCategory()));
         question.setText(questionDto.getText());
         question.setCorrectOptionIndex(questionDto.getCorrectOptionIndex());
 
@@ -90,7 +90,7 @@ public class QuestionService {
     }
 
     public List<Question> getAllQuestions(String category){
-        return questionRepository.findByCategory(category);
+        return questionRepository.findByCategory(Question.Category.valueOf(category));
     }
 
     public QuestionResponse<OptionResponse> getQuestionResponse(Question question){
@@ -113,5 +113,9 @@ public class QuestionService {
                 question.getImageName(),
                 question.getImageType()
         );
+    }
+
+    public void saveList(List<Question> questions){
+        questionRepository.saveAll(questions);
     }
 }

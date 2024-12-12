@@ -46,17 +46,17 @@ public class ExamService {
         }
 
         Collection<? extends Question> logicalQuestions = questionRepository.findRandomQuestionsByCategoryAndDifficulty(
-                "Logical",
+                Question.Category.LOGICAL,
                 Question.Difficulty.valueOf(examDto.getDifficulty().toString()),
                 examDto.getLogicalQuestionsCount());
 
         Collection<? extends Question> programmingQuestions = questionRepository.findRandomQuestionsByCategoryAndDifficulty(
-                "Programming",
+                Question.Category.PROGRAMMING,
                 Question.Difficulty.valueOf(examDto.getDifficulty().toString()),
                 examDto.getProgrammingQuestionsCount());
 
         Collection<? extends Question> technicalQuestions = questionRepository.findRandomQuestionsByCategoryAndDifficulty(
-                "Technical",
+                Question.Category.TECHNICAL,
                 Question.Difficulty.valueOf(examDto.getDifficulty().toString()),
                 examDto.getTechnicalQuestionsCount());
         Collection<? extends ProgrammingQuestion> programmingSectionQuestions=programmingQuestionRepository.findRandomQuestions(

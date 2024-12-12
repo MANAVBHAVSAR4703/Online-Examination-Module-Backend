@@ -30,7 +30,6 @@ public class AuthenticationService {
 
     public String authenticate(LoginDto input) {
         try {
-            // Authenticate the user with email and password
             Authentication authentication = authenticationManager.authenticate(
                     new UsernamePasswordAuthenticationToken(
                             input.getEmail(),
