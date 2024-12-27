@@ -7,6 +7,7 @@ import com.example.demo.models.ExamResult;
 import com.example.demo.models.MonitorImage;
 import com.example.demo.models.User;
 import com.example.demo.responses.ExamResponse;
+import com.example.demo.services.CaptureService;
 import com.example.demo.services.ExamService;
 import com.example.demo.services.MonitorService;
 import com.example.demo.services.UserService;
@@ -32,11 +33,13 @@ public class StudentController {
     private final UserService userService;
     private final ExamService examService;
     private final MonitorService monitorService;
+    private final CaptureService captureService;
 
-    StudentController(UserService userService,ExamService examService,MonitorService monitorService){
+    StudentController(UserService userService,ExamService examService,MonitorService monitorService,CaptureService captureService){
         this.userService=userService;
         this.examService=examService;
         this.monitorService=monitorService;
+        this.captureService=captureService;
     }
 
     @GetMapping("/")
@@ -86,6 +89,17 @@ public class StudentController {
         try {
             byte[] imageBytes = Base64.getDecoder().decode(request.getImage());
             monitorService.saveImage(request.getUserEmail(), imageBytes,request.getExamId());
+            return ResponseEntity.ok("Image saved successfully.");
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error saving image."+e.getMessage());
+        }
+    }
+
+    @PostMapping("/capture")
+    public ResponseEntity<?> saveCaptureData(@Validated @RequestBody MonitorDataDto request) {
+        try {
+            byte[] imageBytes = Base64.getDecoder().decode(request.getImage());
+            captureService.saveImage(request.getUserEmail(), imageBytes,request.getExamId());
             return ResponseEntity.ok("Image saved successfully.");
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error saving image."+e.getMessage());

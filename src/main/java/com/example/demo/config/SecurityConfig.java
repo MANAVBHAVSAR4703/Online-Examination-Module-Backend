@@ -43,7 +43,6 @@ public class SecurityConfig {
         return new UserService(passwordEncoder());
     }
 
-    // Configures the security filter chain
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity httpSecurity) throws Exception {
         return httpSecurity
@@ -59,7 +58,6 @@ public class SecurityConfig {
                 .build();
     }
 
-    // Creates a DaoAuthenticationProvider to handle user authentication
     @Bean
     public AuthenticationProvider authenticationProvider() {
         DaoAuthenticationProvider authenticationProvider = new DaoAuthenticationProvider();
@@ -68,15 +66,11 @@ public class SecurityConfig {
         return authenticationProvider;
     }
 
-
-    // Defines a PasswordEncoder bean that uses bcrypt hashing by default for password encoding
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
     }
 
-
-    // Defines an AuthenticationManager bean to manage authentication processes
     @Bean
     public AuthenticationManager authenticationManager(AuthenticationConfiguration config) throws Exception {
         return config.getAuthenticationManager();
@@ -85,7 +79,6 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration corsConfiguration = new CorsConfiguration();
-        //Make the below setting as * to allow connection from any hos
         corsConfiguration.setAllowedOrigins(List.of("http://localhost:3000","http://192.168.1.7:3000"));
         corsConfiguration.setAllowedMethods(List.of("GET", "POST"));
         corsConfiguration.setAllowCredentials(true);
