@@ -32,6 +32,7 @@ public class AdminController {
     private final ExamService examService;
     private final MonitorService monitorService;
     private final ExportService exportService;
+    private final CaptureService captureService;
 
     @Autowired
     private ExamRepository examRepository;
@@ -43,12 +44,13 @@ public class AdminController {
     private ProgrammingQuestionRepository programmingQuestionRepository;
 
     @Autowired
-    AdminController(AdminService adminService,QuestionService questionService,ExamService examService,MonitorService monitorService,ExportService exportService){
+    AdminController(CaptureService captureService,AdminService adminService,QuestionService questionService,ExamService examService,MonitorService monitorService,ExportService exportService){
         this.adminService=adminService;
         this.questionService=questionService;
         this.examService=examService;
         this.monitorService=monitorService;
         this.exportService=exportService;
+        this.captureService=captureService;
     }
 
     @GetMapping("/hello")
@@ -465,7 +467,24 @@ public class AdminController {
             }).toList();
             return ResponseEntity.ok(monitorImageResponseList);
         } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error saving image."+e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error fetching images."+e.getMessage());
+        }
+    }
+
+    @GetMapping("/getCaptureImages/{email}/{examId}")
+    public ResponseEntity<?> getCaptureData(@PathVariable String  email,@PathVariable Long examId) {
+        try {
+            List<CaptureImages> captureImages=captureService.FilterByEmailAndExamId(email,examId);
+            List<MonitorImageResponse> monitorImageResponseList=captureImages.stream().map(captureImage -> {
+                MonitorImageResponse monitorImageResponse=new MonitorImageResponse();
+                monitorImageResponse.setImage(captureImage.getImage());
+                monitorImageResponse.setId(captureImage.getId());
+                monitorImageResponse.setCaptureTime(captureImage.getCaptureTime());
+                return monitorImageResponse;
+            }).toList();
+            return ResponseEntity.ok(monitorImageResponseList);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error fetching images."+e.getMessage());
         }
     }
 

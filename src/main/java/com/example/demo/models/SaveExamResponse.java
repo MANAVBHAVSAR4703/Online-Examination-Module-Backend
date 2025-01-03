@@ -7,8 +7,6 @@ import java.util.List;
 
 @Entity
 @Data
-@Getter
-@Setter
 @NoArgsConstructor
 @AllArgsConstructor
 public class SaveExamResponse {
@@ -25,10 +23,13 @@ public class SaveExamResponse {
     @Column(nullable = false)
     private int currentQuestionIndex;
 
-    @Column(nullable = false)
-    private List<?> selectedAnswers;
+    @ElementCollection
+    @CollectionTable(name = "selected_answers", joinColumns = @JoinColumn(name = "response_id"))
+    @Column(name = "answer")
+    private List<Integer> selectedAnswers;
 
-    @Column(nullable = false)
-    private List<?> programmingAnswers;
-
+    @ElementCollection
+    @CollectionTable(name = "selected_programming_answers", joinColumns = @JoinColumn(name = "response_id"))
+    @Column(name = "answer")
+    private List<String> programmingAnswers;
 }

@@ -5,6 +5,8 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.awt.*;
+
 @Entity
 @Data
 @NoArgsConstructor
@@ -15,7 +17,11 @@ public class ProgrammingQuestionResponse {
     private Long id;
 
     private Long questionId;
+
+    @Lob
     private String code;
+
+    @Lob
     private String refCode;
 
     @ManyToOne

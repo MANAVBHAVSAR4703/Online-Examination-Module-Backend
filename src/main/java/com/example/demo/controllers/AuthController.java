@@ -1,7 +1,9 @@
 package com.example.demo.controllers;
 
+import com.example.demo.Dto.LoginAttemptDto;
 import com.example.demo.Dto.LoginDto;
 import com.example.demo.Jwt.JwtUtils;
+import com.example.demo.models.LoginAttempts;
 import com.example.demo.models.Student;
 import com.example.demo.models.User;
 import com.example.demo.responses.LoginResponse;
@@ -9,6 +11,7 @@ import com.example.demo.responses.RegisterResponse;
 import com.example.demo.responses.StudentResponse;
 import com.example.demo.responses.UserResponse;
 import com.example.demo.services.AuthenticationService;
+import com.example.demo.services.LoginAttemptService;
 import com.example.demo.services.UserService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -18,6 +21,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -28,12 +32,14 @@ public class AuthController {
     private final AuthenticationService authenticationService;
     private final JwtUtils jwtUtils;
     private final UserService userService;
+    private final LoginAttemptService loginAttemptService;
 
     @Autowired
-    AuthController(AuthenticationService authenticationService, JwtUtils jwtUtils, UserService userService){
+    AuthController(LoginAttemptService loginAttemptService,AuthenticationService authenticationService, JwtUtils jwtUtils, UserService userService){
         this.authenticationService=authenticationService;
         this.jwtUtils=jwtUtils;
         this.userService=userService;
+        this.loginAttemptService=loginAttemptService;
     }
 
     @PostMapping("/login")
@@ -109,6 +115,28 @@ public class AuthController {
                     null
             );
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
+        }
+    }
+
+    @PostMapping("/login-attempts")
+    public ResponseEntity<?> loginAttempts(@Validated @RequestBody LoginAttemptDto loginAttempts){
+        try{
+            loginAttemptService.saveLoginAttempt(
+                    loginAttempts.getEmail(),
+                    loginAttempts.getIpAddress(),
+                    loginAttempts.getUserAgent(),
+                    loginAttempts.isSuccess()
+            );
+            return ResponseEntity.ok(new RegisterResponse<>(
+                    true,
+                    "Login Attempt Marked",
+                    null
+                    ));
+        } catch (Exception e) {
+            return ResponseEntity.ok(new RegisterResponse<>(
+                    false,
+                    "Unable to mark login Attempt"+e.getMessage(),
+                    null));
         }
     }
 }

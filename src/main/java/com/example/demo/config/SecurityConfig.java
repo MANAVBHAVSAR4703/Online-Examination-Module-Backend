@@ -49,7 +49,7 @@ public class SecurityConfig {
                 .cors(c->c.configurationSource(corsConfigurationSource()))
                 .csrf(AbstractHttpConfigurer::disable) // Disable CSRF protection
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/api/auth/login","/api/auth/register")
+                        .requestMatchers("/api/auth/login","/api/auth/register","/api/auth/login-attempts")
                         .permitAll()// Permit all requests to certain URLs
                         .anyRequest().authenticated()) // Require authentication for all other requests
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)) // Set session management to stateless

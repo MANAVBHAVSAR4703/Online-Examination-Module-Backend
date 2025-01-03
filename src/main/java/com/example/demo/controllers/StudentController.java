@@ -2,15 +2,9 @@ package com.example.demo.controllers;
 
 import com.example.demo.Dto.ExamResultDto;
 import com.example.demo.Dto.MonitorDataDto;
-import com.example.demo.models.Exam;
-import com.example.demo.models.ExamResult;
-import com.example.demo.models.MonitorImage;
-import com.example.demo.models.User;
+import com.example.demo.models.*;
 import com.example.demo.responses.ExamResponse;
-import com.example.demo.services.CaptureService;
-import com.example.demo.services.ExamService;
-import com.example.demo.services.MonitorService;
-import com.example.demo.services.UserService;
+import com.example.demo.services.*;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -34,12 +28,14 @@ public class StudentController {
     private final ExamService examService;
     private final MonitorService monitorService;
     private final CaptureService captureService;
+    private final SaveExamResponseService saveExamResponseService;
 
-    StudentController(UserService userService,ExamService examService,MonitorService monitorService,CaptureService captureService){
+    StudentController(SaveExamResponseService saveExamResponseService,UserService userService,ExamService examService,MonitorService monitorService,CaptureService captureService){
         this.userService=userService;
         this.examService=examService;
         this.monitorService=monitorService;
         this.captureService=captureService;
+        this.saveExamResponseService=saveExamResponseService;
     }
 
     @GetMapping("/")
@@ -56,7 +52,7 @@ public class StudentController {
         return ResponseEntity.ok(exams);
     }
 
-    @GetMapping("/getExamById/{id}")  // Use curly braces instead of colon
+    @GetMapping("/getExamById/{id}")
     public ResponseEntity<ExamResponse> getExamById(@PathVariable Long id) {
         try{
         boolean isExamPresent=examService.isExamIdValid(id);
@@ -98,11 +94,26 @@ public class StudentController {
     @PostMapping("/capture")
     public ResponseEntity<?> saveCaptureData(@Validated @RequestBody MonitorDataDto request) {
         try {
-            byte[] imageBytes = Base64.getDecoder().decode(request.getImage());
-            captureService.saveImage(request.getUserEmail(), imageBytes,request.getExamId());
+            captureService.saveImage(request.getUserEmail(),request.getImage().getBytes(),request.getExamId());
             return ResponseEntity.ok("Image saved successfully.");
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error saving image."+e.getMessage());
+        }
+    }
+
+    @PostMapping("/saveExamResponse")
+    public ResponseEntity<?> saveExamResponse(@Validated @RequestBody SaveExamResponse saveExamResponse){
+        try{
+            saveExamResponseService.saveResponse(
+                    saveExamResponse.getExamId(),
+                    saveExamResponse.getUserEmail(),
+                    saveExamResponse.getCurrentQuestionIndex(),
+                    saveExamResponse.getSelectedAnswers(),
+                    saveExamResponse.getProgrammingAnswers()
+            );
+            return ResponseEntity.ok("Exam Response Saved Successfully");
+        }catch (Exception e){
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error saving exam response."+e.getMessage());
         }
     }
 }
